@@ -1,6 +1,6 @@
 #include <core.h>
-#include <stdio.h>
+#include "context.h"
 
 int main(int argc, char* argv[]) {
-    return sdrpp_main(argc, argv);
+    return Context::init_sdrpp(argc, argv, 0, 0, nullptr);
 }
