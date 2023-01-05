@@ -40,14 +40,17 @@ uint32_t Context::version() {
 Context::Context(int width,
                  int height,
                  void* nativeWindow,
+                 const char* rootPath,
                  const char* modulesPath,
                  const char* assetsPath)
     : mWidth(width),
       mHeight(height),
+      mRootPath(rootPath),
       mModulesPath(modulesPath),
       mAssetsPath(assetsPath) {
 
     spdlog::info("[sdrpp]");
+    spdlog::info("Root Path: {0}", mRootPath);
     spdlog::info("Modules Path: {0}", mModulesPath);
     spdlog::info("Asset Path: {0}", mAssetsPath);
 
@@ -72,7 +75,12 @@ Context::Context(int width,
     auto ret = eglMakeCurrent(mEgl.eglDisplay, mEgl.eglSurface, mEgl.eglSurface, mEgl.eglContext);
     assert(ret == EGL_TRUE);
 
-    init_sdrpp(0, nullptr, width, height, nativeWindow);
+    std::vector<const char*> args;
+    args.reserve(3);
+    args.emplace_back("sdrpp");
+    args.emplace_back("--root");
+    args.emplace_back(mRootPath.c_str());
+    init_sdrpp(args.size(), const_cast<char**>(args.data()), width, height, nativeWindow);
 
     // Don't block
     eglSwapInterval(mEgl.eglDisplay, 0);
@@ -193,7 +201,7 @@ void Context::run_task() {
 void Context::resize(int width, int height) {
     mWidth = width;
     mHeight = height;
-    backend::resize(width, height);
+    backend::resize(mWidth, mHeight);
 }
 
 int Context::init_sdrpp(int argc, char* argv[], int width, int height, void* nativeWindow) {
@@ -378,16 +386,6 @@ int Context::init_sdrpp(int argc, char* argv[], int width, int height, void* nat
     defConfig["lockMenuOrder"] = false;
 #endif
 
-    defConfig["modulesDirectory"].clear();
-    defConfig["resourcesDirectory"].clear();
-
-    if (!core::args["modulesDirectory"].s().empty()) {
-        defConfig["modulesDirectory"] = core::args["modulesDirectory"].s();
-    }
-    if (!core::args["resourcesDirectory"].s().empty()) {
-        defConfig["resourcesDirectory"] = core::args["resourcesDirectory"].s();
-    }
-
 #if defined(_WIN32)
     defConfig["modulesDirectory"] = "./modules";
     defConfig["resourcesDirectory"] = "./res";
@@ -398,10 +396,8 @@ int Context::init_sdrpp(int argc, char* argv[], int width, int height, void* nat
     defConfig["modulesDirectory"] = root + "/modules";
     defConfig["resourcesDirectory"] = root + "/res";
 #else
-    if (defConfig["modulesDirectory"].empty())
-        defConfig["modulesDirectory"] = INSTALL_PREFIX "/lib/sdrpp/plugins";
-    if (defConfig["resourcesDirectory"].empty())
-        defConfig["resourcesDirectory"] = INSTALL_PREFIX "/share/sdrpp";
+    defConfig["modulesDirectory"] = INSTALL_PREFIX "/lib/sdrpp/plugins";
+    defConfig["resourcesDirectory"] = INSTALL_PREFIX "/share/sdrpp";
 #endif
 
     // Load config
@@ -487,7 +483,7 @@ int Context::init_sdrpp(int argc, char* argv[], int width, int height, void* nat
     }
 
     // Initialize backend
-    int biRes = backend::init(nullptr, width, height, nativeWindow);
+    int biRes = backend::init("", width, height, nativeWindow);
     if (biRes < 0) { return biRes; }
 
     // Initialize SmGui in normal mode

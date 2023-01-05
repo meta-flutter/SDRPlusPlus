@@ -11,6 +11,7 @@ public:
     Context(int width,
             int height,
             void* nativeWindow,
+            const char* rootPath,
             const char* modulesPath,
             const char* assetsPath);
 
@@ -22,7 +23,7 @@ public:
 
     Context& operator=(const Context&) = delete;
 
-    void draw_frame(uint32_t time);
+    static void draw_frame(uint32_t time);
 
     void run_task();
 
@@ -30,9 +31,10 @@ public:
 
     static int init_sdrpp(int argc, char* argv[], int width, int height, void *nativeWindow);
 
-    void deinit_sdrpp();
+    static void deinit_sdrpp();
 
 private:
+    std::string mRootPath;
     std::string mModulesPath;
     std::string mAssetsPath;
     int mWidth;

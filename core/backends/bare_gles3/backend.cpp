@@ -133,6 +133,29 @@ namespace backend {
         assert(ret == EGL_TRUE);
     }
 
+    bool make_current(EGLDisplay dpy, EGLSurface surface, EGLContext context) {
+        auto res = eglMakeCurrent(dpy, surface, surface, context);
+        if (res != EGL_TRUE) {
+            EGLint egl_error = eglGetError();
+            if (egl_error != EGL_SUCCESS) {
+                spdlog::error("Make current failed: {0}", egl_error);
+            }
+        }
+        return true;
+    }
+
+    bool clear_current(EGLDisplay dpy) {
+        auto res =
+            eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        if (res != EGL_TRUE) {
+            EGLint egl_error = eglGetError();
+            if (egl_error != EGL_SUCCESS) {
+                spdlog::error("Clear current failed: {0}", egl_error);
+            }
+        }
+        return true;
+    }
+
     int init(const std::string& resDir,
              int width,
              int height,
@@ -185,6 +208,8 @@ namespace backend {
     }
 
     void beginFrame() {
+        make_current(_egl.eglDisplay, _egl.eglSurface, _egl.eglContext);
+
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui::NewFrame();
@@ -235,6 +260,8 @@ namespace backend {
         gui::mainWindow.draw();
 
         render();
+
+        clear_current(_egl.eglDisplay);
     }
 
     void resize(int width, int height) {
