@@ -95,7 +95,15 @@ namespace backend {
         return 0;
     }
 
-    int init(std::string resDir) {
+    int init(const std::string& resDir,
+             int width,
+             int height,
+             void *nativeWindow) {
+
+        (void)width;
+        (void)height;
+        (void)nativeWindow;
+
         spdlog::warn("Backend init");
 
         // Get window
@@ -454,6 +462,11 @@ namespace backend {
         { 0x1f4d, 0xd286 },
         { 0x1f4d, 0xd803 }
     };
+}
+
+void resize(int width, int height) {
+    (void)width;
+    (void)height;
 }
 
 extern "C" {

@@ -22,6 +22,7 @@ endif (ANDROID)
 # Backends
 option(OPT_BACKEND_GLFW "Use the GLFW backend" ON)
 option(OPT_BACKEND_ANDROID "Use the Android backend" OFF)
+option(OPT_BACKEND_BARE_GLES3 "Use Bare GLESv3 backend" OFF)
 
 # Compatibility Options
 option(OPT_OVERRIDE_STD_FILESYSTEM "Use a local version of std::filesystem on systems that don't have it yet" OFF)
