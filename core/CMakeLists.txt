@@ -6,7 +6,7 @@ if (USE_INTERNAL_LIBCORRECT)
 endif (USE_INTERNAL_LIBCORRECT)
 
 if (USE_BUNDLE_DEFAULTS)
-add_definitions(-DIS_MACOS_BUNDLE)
+    add_definitions(-DIS_MACOS_BUNDLE)
 endif (USE_BUNDLE_DEFAULTS)
 
 # Main code
@@ -26,8 +26,17 @@ if (OPT_BACKEND_ANDROID)
     set(BACKEND_SRC ${BACKEND_SRC} ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c)
 endif ()
 if (OPT_BACKEND_BARE_GLES3)
-    add_definitions(-DIMGUI_IMPL_OPENGL_ES3)
+    add_compile_definitions(
+            EGL_NO_X11
+            WL_EGL_PLATFORM
+            MESA_EGL_NO_X11_HEADERS
+            IMGUI_IMPL_OPENGL_ES3
+            IMGUI_IMPL_OPENGL_LOADER_CUSTOM
+            IMGUI_IMPL_OPENGL_MAY_HAVE_EXTENSIONS
+            IMGUI_IMPL_OPENGL_MAY_HAVE_BIND_SAMPLER
+    )
     set(BACKEND_SRC backends/bare_gles3/backend.cpp)
+
 endif ()
 
 # Add code to dyn lib
@@ -43,7 +52,7 @@ else ()
 endif ()
 
 # Set the install prefix
-target_compile_definitions(sdrpp_core PUBLIC INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}")
+target_compile_definitions(sdrpp_core PUBLIC INSTALL_PREFIX= "${CMAKE_INSTALL_PREFIX}")
 
 # Include core headers
 target_include_directories(sdrpp_core PUBLIC "src/")
@@ -58,14 +67,14 @@ if (OPT_BACKEND_GLFW)
         # GLFW3
         find_package(glfw3 CONFIG REQUIRED)
         target_link_libraries(sdrpp_core PUBLIC glfw)
-    else()
+    else ()
         find_package(PkgConfig)
         pkg_check_modules(GLFW3 REQUIRED glfw3)
 
         target_include_directories(sdrpp_core PUBLIC ${GLFW3_INCLUDE_DIRS})
         target_link_directories(sdrpp_core PUBLIC ${GLFW3_LIBRARY_DIRS})
         target_link_libraries(sdrpp_core PUBLIC ${GLFW3_LIBRARIES})
-    endif()
+    endif ()
 endif (OPT_BACKEND_GLFW)
 if (OPT_BACKEND_ANDROID)
     target_include_directories(sdrpp_core PUBLIC "backends/android")
@@ -112,25 +121,25 @@ if (MSVC)
     target_link_libraries(sdrpp_core PUBLIC zstd::libzstd_shared)
 elseif (ANDROID)
     target_include_directories(sdrpp_core PUBLIC
-        /sdr-kit/${ANDROID_ABI}/include
-        ${ANDROID_NDK}/sources/android/native_app_glue
-    )
+            /sdr-kit/${ANDROID_ABI}/include
+            ${ANDROID_NDK}/sources/android/native_app_glue
+            )
 
     target_link_libraries(sdrpp_core PUBLIC
-        /sdr-kit/${ANDROID_ABI}/lib/libcpu_features.a
-        /sdr-kit/${ANDROID_ABI}/lib/libvolk.so
-        /sdr-kit/${ANDROID_ABI}/lib/libfftw3f.so
-        /sdr-kit/${ANDROID_ABI}/lib/libzstd.so
-        android
-        EGL
-        GLESv3
-        log
-    )
-else()
+            /sdr-kit/${ANDROID_ABI}/lib/libcpu_features.a
+            /sdr-kit/${ANDROID_ABI}/lib/libvolk.so
+            /sdr-kit/${ANDROID_ABI}/lib/libfftw3f.so
+            /sdr-kit/${ANDROID_ABI}/lib/libzstd.so
+            android
+            EGL
+            GLESv3
+            log
+            )
+else ()
     find_package(PkgConfig)
     if (OPT_BACKEND_BARE_GLES3)
         pkg_check_modules(OPENGL REQUIRED glesv2 egl)
-    else()
+    else ()
         find_package(OPENGL REQUIRED)
     endif ()
     pkg_check_modules(FFTW3 REQUIRED fftw3f)
@@ -141,28 +150,28 @@ else()
     pkg_check_modules(LIBZSTD REQUIRED libzstd)
 
     target_include_directories(sdrpp_core PUBLIC
-        ${OPENGL_INCLUDE_DIRS}
-        ${FFTW3_INCLUDE_DIRS}
-        ${GLFW3_INCLUDE_DIRS}
-        ${VOLK_INCLUDE_DIRS}
-        ${LIBZSTD_INCLUDE_DIRS}
-    )
-    
+            ${OPENGL_INCLUDE_DIRS}
+            ${FFTW3_INCLUDE_DIRS}
+            ${GLFW3_INCLUDE_DIRS}
+            ${VOLK_INCLUDE_DIRS}
+            ${LIBZSTD_INCLUDE_DIRS}
+            )
+
     target_link_directories(sdrpp_core PUBLIC
-        ${OPENGL_LIBRARY_DIRS}
-        ${FFTW3_LIBRARY_DIRS}
-        ${GLFW3_LIBRARY_DIRS}
-        ${VOLK_LIBRARY_DIRS}
-        ${LIBZSTD_LIBRARY_DIRS}
-    )
+            ${OPENGL_LIBRARY_DIRS}
+            ${FFTW3_LIBRARY_DIRS}
+            ${GLFW3_LIBRARY_DIRS}
+            ${VOLK_LIBRARY_DIRS}
+            ${LIBZSTD_LIBRARY_DIRS}
+            )
 
     target_link_libraries(sdrpp_core PUBLIC
-        ${OPENGL_LIBRARIES}
-        ${FFTW3_LIBRARIES}
-        ${GLFW3_LIBRARIES}
-        ${VOLK_LIBRARIES}
-        ${LIBZSTD_LIBRARIES}
-    )
+            ${OPENGL_LIBRARIES}
+            ${FFTW3_LIBRARIES}
+            ${GLFW3_LIBRARIES}
+            ${VOLK_LIBRARIES}
+            ${LIBZSTD_LIBRARIES}
+            )
 
     if (NOT USE_INTERNAL_LIBCORRECT)
         pkg_check_modules(CORRECT REQUIRED libcorrect)

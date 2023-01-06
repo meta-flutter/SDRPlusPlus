@@ -33,21 +33,23 @@
 #endif
 #endif
 
+__attribute__((visibility("default")))
 uint32_t Context::version() {
     return 0x00010000;
 }
 
+__attribute__((visibility("default")))
 Context::Context(int width,
                  int height,
-                 void* nativeWindow,
-                 const char* rootPath,
-                 const char* modulesPath,
-                 const char* assetsPath)
-    : mWidth(width),
-      mHeight(height),
-      mRootPath(rootPath),
-      mModulesPath(modulesPath),
-      mAssetsPath(assetsPath) {
+                 void *nativeWindow,
+                 const char *rootPath,
+                 const char *modulesPath,
+                 const char *assetsPath)
+        : mWidth(width),
+          mHeight(height),
+          mRootPath(rootPath),
+          mModulesPath(modulesPath),
+          mAssetsPath(assetsPath) {
 
     spdlog::info("[sdrpp]");
     spdlog::info("Root Path: {0}", mRootPath);
@@ -55,13 +57,13 @@ Context::Context(int width,
     spdlog::info("Asset Path: {0}", mAssetsPath);
 
     typedef struct {
-        struct wl_display* wl_display;
-        struct wl_surface* wl_surface;
+        struct wl_display *wl_display;
+        struct wl_surface *wl_surface;
         EGLDisplay egl_display;
-        struct wl_egl_window* egl_window;
+        struct wl_egl_window *egl_window;
     } wl;
 
-    auto p = reinterpret_cast<wl*>(nativeWindow);
+    auto p = reinterpret_cast<wl *>(nativeWindow);
     assert(p);
 
     mEgl.eglDisplay = p->egl_display;
@@ -75,12 +77,12 @@ Context::Context(int width,
     auto ret = eglMakeCurrent(mEgl.eglDisplay, mEgl.eglSurface, mEgl.eglSurface, mEgl.eglContext);
     assert(ret == EGL_TRUE);
 
-    std::vector<const char*> args;
+    std::vector<const char *> args;
     args.reserve(3);
     args.emplace_back("sdrpp");
     args.emplace_back("--root");
     args.emplace_back(mRootPath.c_str());
-    init_sdrpp(args.size(), const_cast<char**>(args.data()), width, height, nativeWindow);
+    init_sdrpp(args.size(), const_cast<char **>(args.data()), width, height, nativeWindow);
 
     // Don't block
     eglSwapInterval(mEgl.eglDisplay, 0);
@@ -91,34 +93,35 @@ Context::Context(int width,
 //
 // Driven by Frame callback
 //
+__attribute__((visibility("default")))
 void Context::draw_frame(uint32_t time) {
-    (void)time;
+    (void) time;
 
     backend::drawFrame();
 }
 
-void* Context::get_egl_proc_address(const char* address) {
-    const char* extensions = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
+void *Context::get_egl_proc_address(const char *address) {
+    const char *extensions = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
 
     if (extensions && (strstr(extensions, "EGL_EXT_platform_wayland") ||
                        strstr(extensions, "EGL_KHR_platform_wayland"))) {
-        return (void*)eglGetProcAddress(address);
+        return (void *) eglGetProcAddress(address);
     }
 
     return nullptr;
 }
 
-EGLSurface Context::create_egl_surface(EGLDisplay& eglDisplay,
-                                       EGLConfig& eglConfig,
-                                       void* native_window,
-                                       const EGLint* attrib_list) {
+EGLSurface Context::create_egl_surface(EGLDisplay &eglDisplay,
+                                       EGLConfig &eglConfig,
+                                       void *native_window,
+                                       const EGLint *attrib_list) {
     static PFNEGLCREATEPLATFORMWINDOWSURFACEEXTPROC create_platform_window =
-        nullptr;
+            nullptr;
 
     if (!create_platform_window) {
         create_platform_window =
-            (PFNEGLCREATEPLATFORMWINDOWSURFACEEXTPROC)get_egl_proc_address(
-                "eglCreatePlatformWindowSurfaceEXT");
+                (PFNEGLCREATEPLATFORMWINDOWSURFACEEXTPROC) get_egl_proc_address(
+                        "eglCreatePlatformWindowSurfaceEXT");
     }
 
     if (create_platform_window)
@@ -126,19 +129,20 @@ EGLSurface Context::create_egl_surface(EGLDisplay& eglDisplay,
                                       attrib_list);
 
     return eglCreateWindowSurface(
-        eglDisplay, eglConfig, (EGLNativeWindowType)native_window, attrib_list);
+            eglDisplay, eglConfig, (EGLNativeWindowType) native_window, attrib_list);
 }
 
-void Context::init_egl(void* nativeWindow,
-                       EGLDisplay& eglDisplay,
-                       EGLSurface& eglSurface,
-                       EGLContext& eglContext) {
+void Context::init_egl(void *nativeWindow,
+                       EGLDisplay &eglDisplay,
+                       EGLSurface &eglSurface,
+                       EGLContext &eglContext) {
     constexpr int kEglBufferSize = 24;
 
     EGLint config_attribs[] = {
-        // clang-format off
+            // clang-format off
             EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
             EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
+            EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
             EGL_RED_SIZE, 8,
             EGL_GREEN_SIZE, 8,
             EGL_BLUE_SIZE, 8,
@@ -146,14 +150,15 @@ void Context::init_egl(void* nativeWindow,
             EGL_STENCIL_SIZE, 8,
             EGL_DEPTH_SIZE, 16,
             EGL_NONE
-        // clang-format on
+            // clang-format on
     };
 
     static const EGLint context_attribs[] = {
-        // clang-format off
+            // clang-format off
             EGL_CONTEXT_MAJOR_VERSION, 3,
+            EGL_CONTEXT_MAJOR_VERSION, 2,
             EGL_NONE
-        // clang-format on
+            // clang-format on
     };
 
     EGLint major, minor;
@@ -167,8 +172,8 @@ void Context::init_egl(void* nativeWindow,
     eglGetConfigs(eglDisplay, nullptr, 0, &count);
     assert(count);
 
-    auto* configs =
-        reinterpret_cast<EGLConfig*>(calloc(count, sizeof(EGLConfig)));
+    auto *configs =
+            reinterpret_cast<EGLConfig *>(calloc(count, sizeof(EGLConfig)));
     assert(configs);
 
     EGLint n;
@@ -190,21 +195,42 @@ void Context::init_egl(void* nativeWindow,
     }
 
     eglContext =
-        eglCreateContext(eglDisplay, egl_conf, EGL_NO_CONTEXT, context_attribs);
+            eglCreateContext(eglDisplay, egl_conf, EGL_NO_CONTEXT, context_attribs);
     eglSurface = create_egl_surface(eglDisplay, egl_conf, nativeWindow, nullptr);
     assert(eglSurface != EGL_NO_SURFACE);
 }
 
+__attribute__((visibility("default")))
 void Context::run_task() {
 }
 
+__attribute__((visibility("default")))
 void Context::resize(int width, int height) {
     mWidth = width;
     mHeight = height;
     backend::resize(mWidth, mHeight);
 }
 
-int Context::init_sdrpp(int argc, char* argv[], int width, int height, void* nativeWindow) {
+__attribute__((visibility("default")))
+void Context::de_initialize() {
+
+    // Shut down all modules
+    for (auto &[name, mod]: core::moduleManager.modules) {
+        mod.end();
+    }
+
+    // Terminate backend
+    backend::end();
+
+    sigpath::iqFrontEnd.stop();
+
+    core::configManager.disableAutoSave();
+    core::configManager.save();
+
+    spdlog::info("Exiting successfully");
+}
+
+int Context::init_sdrpp(int argc, char *argv[], int width, int height, void *nativeWindow) {
     spdlog::info("SDR++ v" VERSION_STR);
 
 #ifdef IS_MACOS_BUNDLE
@@ -223,7 +249,7 @@ int Context::init_sdrpp(int argc, char* argv[], int width, int height, void* nat
         return 0;
     }
 
-    bool serverMode = (bool)core::args["server"];
+    bool serverMode = (bool) core::args["server"];
 
 #ifdef _WIN32
     // Free console if the user hasn't asked for a console and not in server mode
@@ -234,7 +260,7 @@ int Context::init_sdrpp(int argc, char* argv[], int width, int height, void* nat
 #endif
 
     // Check root directory
-    std::string root = (std::string)core::args["root"];
+    std::string root = (std::string) core::args["root"];
     if (!std::filesystem::exists(root)) {
         spdlog::warn("Root directory {0} does not exist, creating it", root);
         if (!std::filesystem::create_directories(root)) {
@@ -360,7 +386,7 @@ int Context::init_sdrpp(int argc, char* argv[], int width, int height, void* nat
 
     defConfig["modules"] = json::array();
 
-    defConfig["offsetMode"] = (int)0; // Off
+    defConfig["offsetMode"] = (int) 0; // Off
     defConfig["offset"] = 0.0;
     defConfig["showMenu"] = true;
     defConfig["showWaterfall"] = true;
@@ -437,7 +463,7 @@ int Context::init_sdrpp(int argc, char* argv[], int width, int height, void* nat
 #endif
 
     // Fix missing elements in config
-    for (auto const& item : defConfig.items()) {
+    for (auto const &item: defConfig.items()) {
         if (!core::configManager.conf.contains(item.key())) {
             spdlog::info("Missing key in config {0}, repairing", item.key());
             core::configManager.conf[item.key()] = defConfig[item.key()];
@@ -446,7 +472,7 @@ int Context::init_sdrpp(int argc, char* argv[], int width, int height, void* nat
 
     // Remove unused elements
     auto items = core::configManager.conf.items();
-    for (auto const& item : items) {
+    for (auto const &item: items) {
         if (!defConfig.contains(item.key())) {
             spdlog::info("Unused key in config {0}, repairing", item.key());
             core::configManager.conf.erase(item.key());
@@ -454,7 +480,7 @@ int Context::init_sdrpp(int argc, char* argv[], int width, int height, void* nat
     }
 
     // Update to new module representation in config if needed
-    for (auto [_name, inst] : core::configManager.conf["moduleInstances"].items()) {
+    for (auto [_name, inst]: core::configManager.conf["moduleInstances"].items()) {
         if (!inst.is_string()) { continue; }
         std::string mod = inst;
         json newMod;
@@ -478,7 +504,8 @@ int Context::init_sdrpp(int argc, char* argv[], int width, int height, void* nat
     // Assert that the resource directory is absolute and check existence
     resDir = std::filesystem::absolute(resDir).string();
     if (!std::filesystem::is_directory(resDir)) {
-        spdlog::error("Resource directory doesn't exist! Please make sure that you've configured it correctly in config.json (check readme for details)");
+        spdlog::error(
+                "Resource directory doesn't exist! Please make sure that you've configured it correctly in config.json (check readme for details)");
         return 1;
     }
 
@@ -509,22 +536,4 @@ int Context::init_sdrpp(int argc, char* argv[], int width, int height, void* nat
 
     spdlog::info("Ready.");
     return 0;
-}
-
-void Context::deinit_sdrpp() {
-
-    // Shut down all modules
-    for (auto& [name, mod] : core::moduleManager.modules) {
-        mod.end();
-    }
-
-    // Terminate backend
-    backend::end();
-
-    sigpath::iqFrontEnd.stop();
-
-    core::configManager.disableAutoSave();
-    core::configManager.save();
-
-    spdlog::info("Exiting successfully");
 }

@@ -1,3 +1,5 @@
+cmake_policy(SET CMP0063 NEW)
+
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 option(ENABLE_IO_THREAD "Start up a separate I/O thread, otherwise I'd need to call an update function" ON)

@@ -20,7 +20,7 @@
 #define SDRPP_MOD_EXTENTSION ".dll"
 #else
 #include <dlfcn.h>
-#define MOD_EXPORT extern "C"
+#define MOD_EXPORT __attribute__((visibility("default"))) extern "C"
 #ifdef __APPLE__
 #define SDRPP_MOD_EXTENTSION ".dylib"
 #else

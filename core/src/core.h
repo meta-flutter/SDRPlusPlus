@@ -13,4 +13,5 @@ namespace core {
     void setInputSampleRate(double samplerate);
 };
 
+__attribute__((visibility("default")))
 int sdrpp_main(int argc, char* argv[]);
